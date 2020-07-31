@@ -8,21 +8,19 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
+import physicsEngine.PhysicsObject;
 
 public class Player extends Entity {
 
-    private static final int WIDTH = 100;
+    private static final int WIDTH = 30;
     private static final int HEIGHT = 200;
-    private static final float AXIS_ACCEL = 1;
-    private static final float MAX_AXIS_VEL = 15;
+    private static final float AXIS_FORCE = 1;
 
-    private static float axisAcceleration;
-    private static float axisSlow;
+    private static float axisForce;
 
     int playerId;
-    Vec2 position;
-    Vec2 velocity;
-    float angleRads;
+
+    PhysicsObject object;
 
     KeyBinding up;
     KeyBinding down;
@@ -36,76 +34,83 @@ public class Player extends Entity {
         this.owner = owner;
 
         playerId = id;
-        position = new Vec2(x, y);
-        velocity = new Vec2(0, 0);
-        angleRads = 0;
 
-        axisAcceleration = AXIS_ACCEL * owner.getFrameRateFactor();
+        axisForce = AXIS_FORCE * owner.getFrameRateFactor();
 
         setupKeys(inputHandler);
 
-        Vec2 windowDim = owner.getWindowDim();
-        double[] points = new double[]{
-                Math.random() * windowDim.getX(), Math.random() * windowDim.getY(),
-                Math.random() * windowDim.getX(), Math.random() * windowDim.getY(),
-                Math.random() * windowDim.getX(), Math.random() * windowDim.getY(),
-                Math.random() * windowDim.getX(), Math.random() * windowDim.getY()
-        };
-        Polygon visuals = new Polygon(points);
+        object = owner.getPhysicsWorld().addCircle(x, y, WIDTH);
 
-        addVisual(visuals);
-
-        customMath.Polygon polygon = new customMath.Polygon(
-                points.length/2,
-                points
-        );
-
-        Vec2 midPoint = polygon.getCenter();
-        Circle c = new Circle(midPoint.getX(), midPoint.getY(), 5);
-        c.setFill(Color.RED);
-
+        Circle c = new Circle(0, 0, WIDTH);
+        c.setFill(Color.BLUE);
         addVisual(c);
     }
 
     private void setupKeys(UserInputHandler inputHandler)
     {
-        up = inputHandler.createKeyBinding(KeyCode.W);
-        down = inputHandler.createKeyBinding(KeyCode.S);
-        left = inputHandler.createKeyBinding(KeyCode.A);
-        right = inputHandler.createKeyBinding(KeyCode.D);
+        if (playerId == 1) {
+            up = inputHandler.createKeyBinding(KeyCode.W);
+            down = inputHandler.createKeyBinding(KeyCode.S);
+            left = inputHandler.createKeyBinding(KeyCode.A);
+            right = inputHandler.createKeyBinding(KeyCode.D);
+        }
+        else
+        {
+            up = inputHandler.createKeyBinding(KeyCode.UP);
+            down = inputHandler.createKeyBinding(KeyCode.DOWN);
+            left = inputHandler.createKeyBinding(KeyCode.LEFT);
+            right = inputHandler.createKeyBinding(KeyCode.RIGHT);
+        }
     }
 
     @Override
     public void update()
     {
-        if (up.isPressed() &&
-            (velocity.getY() > -MAX_AXIS_VEL))
+        Vec2 force = new Vec2(0, 0);
+
+        if (up.isPressed())
         {
-            velocity.addY(-axisAcceleration);
+            force.addY(-axisForce);
         }
 
-        if (down.isPressed() &&
-                (velocity.getY() < MAX_AXIS_VEL))
+        if (down.isPressed())
         {
-            velocity.addY(axisAcceleration);
+            force.addY(axisForce);
         }
 
-        if (left.isPressed() &&
-                (velocity.getX() > -MAX_AXIS_VEL))
+        if (left.isPressed())
         {
-            velocity.addX(-axisAcceleration);
+            force.addX(-axisForce);
         }
 
-        if (right.isPressed() &&
-                (velocity.getX() < MAX_AXIS_VEL))
+        if (right.isPressed())
         {
-            velocity.addX(axisAcceleration);
+            force.addX(axisForce);
         }
 
-        position.addX(velocity.getX());
-        position.addY(velocity.getY());
+        if (object.getX() < 0)
+        {
+            object.setX(owner.getWindowDim().getX());
+        }
+        else if (object.getX() > owner.getWindowDim().getX())
+        {
+            object.setX(0);
+        }
 
-        this.x = position.getX();
-        this.y = position.getY();
+        if (object.getY() < 0)
+        {
+            object.setY(owner.getWindowDim().getY());
+        }
+        else if (object.getY() > owner.getWindowDim().getY())
+        {
+            object.setY(0);
+        }
+
+
+        this.x = object.getX();
+        this.y = object.getY();
+        this.orientation = object.getAngleRads() * 180 / (float)Math.PI;
+
+        object.applyForce(force);
     }
 }

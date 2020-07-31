@@ -5,6 +5,7 @@ import gameEngine.GameEngine;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import physicsEngine.PhysicsWorld;
 
 public class SumoGame extends GameEngine {
 
@@ -14,7 +15,10 @@ public class SumoGame extends GameEngine {
     private final static float ORIGINAL_FRAME_RATE = 60.0f;
     private final static int FRAME_RATE = 60;
 
+    PhysicsWorld physicsWorld;
+
     Player p1;
+    Player p2;
 
     static SumoGame debugInstance;
 
@@ -28,6 +32,8 @@ public class SumoGame extends GameEngine {
         return new Vec2(WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
+    public PhysicsWorld getPhysicsWorld(){ return physicsWorld; }
+
     @Override
     protected void onInitialize()
     {
@@ -36,6 +42,8 @@ public class SumoGame extends GameEngine {
         setFramesPerSecond(FRAME_RATE);
 
         debugInstance = this;
+
+        physicsWorld = new PhysicsWorld(FRAME_RATE, false, true);
     }
 
     @Override
@@ -43,10 +51,16 @@ public class SumoGame extends GameEngine {
     {
         p1 = new Player(1, 0, 0, getUserInputHandler(), this);
         addEntity(p1);
+
+        p2 = new Player(2, 500, 300, getUserInputHandler(), this);
+        addEntity(p2);
     }
 
     @Override
-    protected void onUpdateStart(){}
+    protected void onUpdateStart()
+    {
+        float alpha = physicsWorld.update(1.0f / getFramesPerSecond());
+    }
 
     @Override
     protected void onUpdateFinish(){}
