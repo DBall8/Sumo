@@ -19,6 +19,14 @@ public class Vec2 {
         return y;
     }
 
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
     public float getMagnitude()
     {
         return (float)Math.sqrt((x*x) + (y*y));
@@ -71,9 +79,15 @@ public class Vec2 {
         return (x*v2.getY()) - (y * v2.getX());
     }
 
+    public Vec2 getTangent()
+    {
+        Vec2 tangent = new Vec2(-y, x);
+        return tangent;
+    }
+
     public Vec2 getTangentTowards(Vec2 dir)
     {
-        Vec2 tangent = new Vec2(y, -x);
+        Vec2 tangent = new Vec2(-y, x);
 
         // If the tangent is opposite the direction given, flip it
         if (tangent.dot(dir) < 0)

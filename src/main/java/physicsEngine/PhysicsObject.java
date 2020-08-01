@@ -9,11 +9,11 @@ import java.util.List;
 public abstract class PhysicsObject {
 
     protected final static float MASS_FACTOR = 0.000001f;
-    protected final static float DRAG_COEFF = 0.00001f;
 
     protected Vec2 position;
     protected float angle;           // In radiians
 
+    protected Vec2 acceleration = new Vec2(0, 0);
     protected Vec2 velocity;
     protected float angularVelocity; // In radiians/s
 
@@ -22,12 +22,23 @@ public abstract class PhysicsObject {
     protected float mass;
     protected float invertedMass;
 
+    protected float gravity;
+    protected float drag;
+
     protected Material material = MetalMaterial.getInstance();
 
-    public PhysicsObject()
-    {}
+    public PhysicsObject(float gravity, float drag)
+    {
+        this.gravity = gravity;
+        this.drag = drag;
+    }
 
     public abstract void checkCollision(PhysicsCircle circle, List<Collision> newCollisions);
+    public abstract float getEarliestCollision(PhysicsCircle circle, float time);
+
+    public abstract void checkCollision(PhyicsAABox box, List<Collision> newCollisions);
+    public abstract float getEarliestCollision(PhyicsAABox box, float time);
+
     public abstract float getCrossSection(Vec2 direction);
 
     /**
@@ -41,10 +52,33 @@ public abstract class PhysicsObject {
         {
             checkCollision((PhysicsCircle)object, newCollisions);
         }
+        else if (object instanceof PhyicsAABox)
+        {
+            checkCollision((PhyicsAABox)object, newCollisions);
+        }
+    }
+
+    /**
+     * Dispatcher
+     */
+    public float getEarliestCollision(PhysicsObject object, float time)
+    {
+        if (object instanceof PhysicsCircle)
+        {
+            return getEarliestCollision((PhysicsCircle)object, time);
+        }
+        if (object instanceof PhyicsAABox)
+        {
+            return getEarliestCollision((PhyicsAABox)object, time);
+        }
+
+        return time;
     }
 
     public void update(float time)
     {
+        // Apply stored forces
+        // F = m * v/s
         velocity.addX(invertedMass * storedForces.getX() * time);
         velocity.addY(invertedMass * storedForces.getY() * time);
 
@@ -53,10 +87,24 @@ public abstract class PhysicsObject {
 
     public void move(float time)
     {
+        velocity.addX(time * acceleration.getX());
+        velocity.addY(time * acceleration.getY());
+
         position.addX(time * velocity.getX());
         position.addY(time * velocity.getY());
 
         angle += angularVelocity * time;
+
+        // 0 velocity below a threshold
+        if (velocity.getX() < 0.01f && velocity.getX() > -0.01f)
+        {
+            velocity.setX(0);
+        }
+
+        if (velocity.getY() < 0.01f && velocity.getY() > -0.01f)
+        {
+            velocity.setY(0);
+        }
     }
 
     /**
@@ -103,16 +151,11 @@ public abstract class PhysicsObject {
         position = new Vec2(position.getX(), y);
     }
 
-    public void applyDragForce(float time)
+    void applyConstantForces()
     {
-        float crossSection = getCrossSection(velocity);
-        float vSquared = velocity.getMagnitudeSquared();
-
-        float drag = DRAG_COEFF * vSquared * crossSection / 2.0f * time;
-
-        Vec2 dragForce = velocity.getDir();
-        dragForce.mult(-drag);
-
-        velocity = velocity.add(dragForce);
+        acceleration = new Vec2(
+                -1.0f * drag * velocity.getX(),
+                gravity - (drag * velocity.getY())
+        );
     }
 }

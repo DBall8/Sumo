@@ -13,12 +13,18 @@ public class SumoGame extends GameEngine {
     private int WINDOW_HEIGHT = 500;
 
     private final static float ORIGINAL_FRAME_RATE = 60.0f;
-    private final static int FRAME_RATE = 60;
+    private final static int FRAME_RATE = 120;
+
+    private final static int NUM_CHARARACTERS = 15;
 
     PhysicsWorld physicsWorld;
 
     Player p1;
     Player p2;
+
+    MouseUser mouseControl;
+
+    Character[] characters;
 
     static SumoGame debugInstance;
 
@@ -43,7 +49,7 @@ public class SumoGame extends GameEngine {
 
         debugInstance = this;
 
-        physicsWorld = new PhysicsWorld(FRAME_RATE, false, true);
+        physicsWorld = new PhysicsWorld(FRAME_RATE, 0.0f, 0.8f);
     }
 
     @Override
@@ -54,6 +60,11 @@ public class SumoGame extends GameEngine {
 
         p2 = new Player(2, 500, 300, getUserInputHandler(), this);
         addEntity(p2);
+
+        createRandomCharacters(NUM_CHARARACTERS);
+
+        mouseControl = new MouseUser(getUserInputHandler(), characters);
+        addEntity(mouseControl);
     }
 
     @Override
@@ -84,5 +95,29 @@ public class SumoGame extends GameEngine {
         Circle c = new Circle(x, y, radius);
         c.setFill(color);
         ADD_DEBUG(c);
+    }
+
+    private void createRandomCharacters(int numCharacters)
+    {
+        characters = new Character[numCharacters];
+        for (int i=0; i<numCharacters; i++)
+        {
+            float x = (float) (Math.random() * getWindowDim().getX());
+            float y = (float) (Math.random() * getWindowDim().getY());
+            float size = (float) (Math.random() * 45 + 5);
+
+            float shape = (float)Math.random();
+            if (shape < 0.5) {
+
+                characters[i] = new Character(x, y, size, this);
+            }
+            else
+            {
+                float height = (float) (Math.random() * 45 + 5);
+                characters[i] = new Character(x, y, size, height,this);
+            }
+
+            addEntity(characters[i]);
+        }
     }
 }

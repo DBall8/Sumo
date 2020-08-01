@@ -6,33 +6,44 @@ import java.util.List;
 
 public class PhysicsWorld {
 
+    private final static boolean CCD = true;
+
     private List<PhysicsObject> physicsObjects = new ArrayList<>();
     private int numObjects;
 
     private List<Collision> newCollisions = new LinkedList<>();
 
     private float timeStep;
-    private boolean gravity;
-    private boolean slowdown;
+    private float gravity;
+    private float drag;
 
     private float timeAccumulator;
 
-    public PhysicsWorld(int updatesPerSecond, boolean gravity, boolean slowdown)
+    public PhysicsWorld(int updatesPerSecond, float gravity, float drag)
     {
         this.timeStep = 1.0f / updatesPerSecond;
         this.gravity = gravity;
-        this.slowdown = slowdown;
+        this.drag = drag;
 
         this.timeAccumulator = 0;
     }
 
     public PhysicsCircle addCircle(float x, float y, float radius)
     {
-        PhysicsCircle circle = new PhysicsCircle(x, y, radius);
+        PhysicsCircle circle = new PhysicsCircle(x, y, radius, gravity, drag);
         physicsObjects.add(circle);
         numObjects++;
 
         return circle;
+    }
+
+    public PhyicsAABox addAABox(float x, float y, float width, float height)
+    {
+        PhyicsAABox box = new PhyicsAABox(x, y, width, height, gravity, drag);
+        physicsObjects.add(box);
+        numObjects++;
+
+        return box;
     }
 
     /**
@@ -56,8 +67,22 @@ public class PhysicsWorld {
     private void step(float time)
     {
         updateForces(time);
-        checkCollisions();
-        move(time);
+
+        if (CCD) {
+            float timeLeft = time;
+            while (timeLeft > 0.0000001f) {
+                float step = findEarliestCollision(timeLeft);
+                move(time);
+                checkCollisions();
+
+                timeLeft -= step;
+            }
+        }
+        else
+        {
+            checkCollisions();
+            move(time);
+        }
     }
 
     private void updateForces(float time)
@@ -65,8 +90,32 @@ public class PhysicsWorld {
         for (int i=0; i<numObjects; i++)
         {
             physicsObjects.get(i).update(time);
-            if (slowdown) physicsObjects.get(i).applyDragForce(time);
+            physicsObjects.get(i).applyConstantForces();
         }
+    }
+
+    private float findEarliestCollision(float time)
+    {
+        float earliestTime = time;
+        // Check each object against all objects that come after it
+        // Skip the last object, because it will already have checked with all objects
+        for (int i=0; i<(numObjects-1); i++)
+        {
+            PhysicsObject o1 = physicsObjects.get(i);
+            for (int j=i+1; j < numObjects; j++)
+            {
+                PhysicsObject o2 = physicsObjects.get(j);
+                float t = o1.getEarliestCollision(o2, time);
+                if (t < earliestTime) earliestTime = t;
+            }
+        }
+
+        if (earliestTime < time)
+        {
+            System.out.println(earliestTime);
+        }
+
+        return earliestTime;
     }
 
     private void checkCollisions()

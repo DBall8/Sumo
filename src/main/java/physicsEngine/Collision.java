@@ -4,7 +4,7 @@ import customMath.Vec2;
 
 public class Collision {
 
-    private final static float POS_CORECTION_PERCENT = 0.4f;
+    private final static float POS_CORECTION_PERCENT = 0.5f;
 
     private PhysicsObject object1;
     private PhysicsObject object2;
@@ -34,18 +34,44 @@ public class Collision {
     {
         correctPosition();
 
-        // Relative velocity (object2's velocity relative to object1)
-        Vec2 relativeVelocity = object2.velocity.sub(object1.velocity);
+        // In the linear direction of the collision:
+        // Conservation of momentum:
+        // m1*u1 + m2*u2 = m1*v1 + m2*v2
 
-        // Relative velocity along the collision vector
-        float normalVelocity = relativeVelocity.dot(collisionVector);
+        // Conservation of kinetic energy
+        // 0.5*m1*u1*u1 + 0.5*m2*u2*u2 = 0.5*m1*v1*v1 + 0.5*m2*v2*v2
 
-        // Return if already moving apart
-        if (normalVelocity >= 0) return;
+        // Solve system of equations for velocities along normal
+        // Velocities along tangent remain the same as before
 
-        float restitution = (object1.material.getRestitution() + object2.material.getRestitution()) / 2.0f;
-        float responseVelocity = (1.0f + restitution) * normalVelocity;
+        // Velocity tangential to the collision, will remain unchanged
+        Vec2 tangent = collisionVector.getTangent();
+        float t1 = object1.velocity.dot(tangent);
+        float t2 = object2.velocity.dot(tangent);
 
+        float u1 = object1.velocity.dot(collisionVector);
+        float u2 = object2.velocity.dot(collisionVector);
+        float massSum = object1.mass + object2.mass;
+
+        float v1 = ((2.0f * object2.mass * u2) + ((object1.mass - object2.mass) * u1))
+                / massSum;
+        float v2 = ((2.0f * object1.mass * u1) + ((object2.mass - object1.mass) * u2))
+                / massSum;
+
+        Vec2 v1Vector = collisionVector.copy();
+        v1Vector.mult(v1);
+        Vec2 v2Vector = collisionVector.copy();
+        v2Vector.mult(v2);
+
+        object1.velocity = new Vec2(
+                (collisionVector.getX() * v1) + (tangent.getX() * t1),
+                (collisionVector.getY() * v1) + (tangent.getY() * t1)
+        );
+
+        object2.velocity = new Vec2(
+                (collisionVector.getX() * v2) + (tangent.getX() * t2),
+                (collisionVector.getY() * v2) + (tangent.getY() * t2)
+        );
     }
 
     private void correctPosition()
