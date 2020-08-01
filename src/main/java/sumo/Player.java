@@ -39,9 +39,11 @@ public class Player extends Entity {
 
         setupKeys(inputHandler);
 
-        object = owner.getPhysicsWorld().addCircle(x, y, WIDTH);
+        float size = WIDTH;
 
-        Circle c = new Circle(0, 0, WIDTH);
+        object = owner.getPhysicsWorld().addCircle(x, y, size);
+
+        Circle c = new Circle(0, 0, size);
         c.setFill(Color.BLUE);
         addVisual(c);
     }

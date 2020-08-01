@@ -107,7 +107,8 @@ public class SumoGame extends GameEngine {
             float size = (float) (Math.random() * 45 + 5);
 
             float shape = (float)Math.random();
-            if (shape < 0.5) {
+            if (shape < 10.5)
+            {
 
                 characters[i] = new Character(x, y, size, this);
             }

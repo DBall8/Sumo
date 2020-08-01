@@ -87,13 +87,13 @@ public abstract class PhysicsObject {
 
     public void move(float time)
     {
-        velocity.addX(time * acceleration.getX());
-        velocity.addY(time * acceleration.getY());
-
         position.addX(time * velocity.getX());
         position.addY(time * velocity.getY());
 
         angle += angularVelocity * time;
+
+        velocity.addX(time * acceleration.getX());
+        velocity.addY(time * acceleration.getY());
 
         // 0 velocity below a threshold
         if (velocity.getX() < 0.01f && velocity.getX() > -0.01f)

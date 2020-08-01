@@ -54,16 +54,24 @@ public class PhysicsCircle extends PhysicsObject{
 
         // Circle 1's velocity if circle 2 is the reference point
         Vec2 relativeVelocity = velocity.sub(circle.velocity);
-        Vec2 velocityNormal = relativeVelocity.normalize();
+        Vec2 velocityNormal = relativeVelocity.copy().normalize();
 
         float relativeVelocityMagnitude = relativeVelocity.getMagnitude();
-        if (relativeVelocityMagnitude < 0) return time;
+        if (relativeVelocityMagnitude <= 0)
+        {
+//            System.out.println("Mag 0");
+            return time;
+        }
 
         float radiusSum = radius + circle.radius;
 
+        // Distance from point to perpendicular intersection of circle
+        float normalDot = relativePosition.dot(velocityNormal);
+
         Vec2 tangent = velocityNormal.getTangent();
         float tangentDot = tangent.dot(relativePosition);
-        if (Math.abs(tangentDot) > radiusSum)
+        if (Math.abs(tangentDot) > radiusSum ||
+            normalDot < 0)
         {
             // Will not collide
             return time;
@@ -71,15 +79,31 @@ public class PhysicsCircle extends PhysicsObject{
 
         // Will eventually collide
 
-        // Distance from point to perpendicular intersection of circle
-        float normalDot = relativePosition.dot(velocityNormal);
-
         // Distance to intersection on the circle
         float normalDist = normalDot - (float)Math.sqrt((radiusSum * radiusSum) - (tangentDot * tangentDot));
 
+        // NOT GOOD
+        if (normalDist < 0)
+        {
+            // Overlapping, need to cause a collision NOW
+            return 0;
+        }
+
         float collisionTime = normalDist / relativeVelocityMagnitude;
 
-        if (collisionTime < time) return collisionTime;
+//        System.out.println(collisionTime);
+
+//        System.out.format("Dist: %.2f, V: %.2f, Time: %.5f\n", normalDist,relativeVelocityMagnitude, collisionTime);
+
+        if (collisionTime < time)
+        {
+            System.out.println("CLOSE -------------------------------");
+
+
+            return collisionTime;
+        }
+
+//        System.out.format("Large time: %.5f\n", collisionTime);
 
         return time;
     }

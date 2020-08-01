@@ -40,63 +40,63 @@ public class PhyicsAABox extends PhysicsObject {
     @Override
     public void checkCollision(PhysicsCircle circle, List<Collision> newCollisions)
     {
-        float dx = Math.abs(circle.position.getX() - position.getX()) - width/2 - circle.getRadius();
-        float dy = Math.abs(circle.position.getY() - position.getY()) - height/2 - circle.getRadius();
-
-        if (dx <= 0 && dy <=0)
-        {
-            System.out.println("COLLIDE");
-            // Collision
-            Vec2 collisionFace1;
-            Vec2 collisionFace2;
-            float penetration;
-            if (dx > dy)
-            {
-                penetration = -1.0f * dx;
-                // Closest side is left or right
-                if (circle.position.getX() > position.getX())
-                {
-                    // Closest side is right
-                    collisionFace1 = new Vec2(position.getX() + width/2, position.getY() - height/2);
-                    collisionFace2 = new Vec2(position.getX() + width/2, position.getY() + height/2);
-                }
-                else
-                {
-                    // closest side is left
-                    collisionFace1 =  new Vec2(position.getX() - width/2, position.getY() - height/2);
-                    collisionFace2 =  new Vec2(position.getX() - width/2, position.getY() + height/2);
-                }
-            }
-            else
-            {
-                penetration = -1.0f * dy;
-                // Closest side is top or bottom
-                if (circle.position.getY() > position.getY())
-                {
-                    // Closest side is top
-                    collisionFace1 = new  Vec2(position.getX() + width/2, position.getY() - height/2);
-                    collisionFace2 = new  Vec2(position.getX() - width/2, position.getY() - height/2);
-                }
-                else
-                {
-                    // closest side is bottom
-                    collisionFace1 = new  Vec2(position.getX() + width/2, position.getY() + height/2);
-                    collisionFace2 = new  Vec2(position.getX() - width/2, position.getY() + height/2);
-                }
-            }
-
-            Vec2 outwards = collisionFace1.sub(position);
-            Vec2 collisionNormal = collisionFace2.sub(collisionFace1).getTangentTowards(outwards);
-            collisionNormal.normalize();
-
-            Collision collision = new Collision(this, circle, collisionNormal, penetration);
-            collision.addContactPoint(getClosestPointOnLine(collisionFace1, collisionFace2, circle.position));
-        }
+//        float dx = Math.abs(circle.position.getX() - position.getX()) - width/2 - circle.getRadius();
+//        float dy = Math.abs(circle.position.getY() - position.getY()) - height/2 - circle.getRadius();
+//
+//        if (dx <= 0 && dy <=0)
+//        {
+//            System.out.println("COLLIDE");
+//            // Collision
+//            Vec2 collisionFace1;
+//            Vec2 collisionFace2;
+//            float penetration;
+//            if (dx > dy)
+//            {
+//                penetration = -1.0f * dx;
+//                // Closest side is left or right
+//                if (circle.position.getX() > position.getX())
+//                {
+//                    // Closest side is right
+//                    collisionFace1 = new Vec2(position.getX() + width/2, position.getY() - height/2);
+//                    collisionFace2 = new Vec2(position.getX() + width/2, position.getY() + height/2);
+//                }
+//                else
+//                {
+//                    // closest side is left
+//                    collisionFace1 =  new Vec2(position.getX() - width/2, position.getY() - height/2);
+//                    collisionFace2 =  new Vec2(position.getX() - width/2, position.getY() + height/2);
+//                }
+//            }
+//            else
+//            {
+//                penetration = -1.0f * dy;
+//                // Closest side is top or bottom
+//                if (circle.position.getY() > position.getY())
+//                {
+//                    // Closest side is top
+//                    collisionFace1 = new  Vec2(position.getX() + width/2, position.getY() - height/2);
+//                    collisionFace2 = new  Vec2(position.getX() - width/2, position.getY() - height/2);
+//                }
+//                else
+//                {
+//                    // closest side is bottom
+//                    collisionFace1 = new  Vec2(position.getX() + width/2, position.getY() + height/2);
+//                    collisionFace2 = new  Vec2(position.getX() - width/2, position.getY() + height/2);
+//                }
+//            }
+//
+//            Vec2 outwards = collisionFace1.sub(position);
+//            Vec2 collisionNormal = collisionFace2.sub(collisionFace1).getTangentTowards(outwards);
+//            collisionNormal.normalize();
+//
+//            Collision collision = new Collision(this, circle, collisionNormal, penetration);
+//            collision.addContactPoint(getClosestPointOnLine(collisionFace1, collisionFace2, circle.position));
+//        }
     }
 
     @Override
     public float getEarliestCollision(PhysicsCircle circle, float time) {
-        return 0;
+        return time;
     }
 
     @Override
