@@ -7,6 +7,9 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import physicsEngine.PhysicsObject;
+import physicsEngine.material.MetalMaterial;
+import physicsEngine.material.StaticMaterial;
+import physicsEngine.material.WoodMaterial;
 
 public class Character extends Entity {
 
@@ -19,7 +22,7 @@ public class Character extends Entity {
         this.owner = owner;
         this.size = size;
 
-        object = owner.getPhysicsWorld().addCircle(x, y, size);
+        object = owner.getPhysicsWorld().addCircle(x, y, size, WoodMaterial.getInstance());
         Circle c = new Circle(0, 0, size);
         c.setFill(Color.GREEN);
         addVisual(c);
@@ -30,12 +33,12 @@ public class Character extends Entity {
         addVisual(l);
     }
 
-    public Character(float x, float y, float width, float height, SumoGame owner)
+    public Character(float x, float y, float width, float height, boolean isStatic, SumoGame owner)
     {
         this.owner = owner;
         this.size = width;
 
-        object = owner.getPhysicsWorld().addAABox(x, y, width, height);
+        object = owner.getPhysicsWorld().addAABox(x, y, width, height, (isStatic ? StaticMaterial.getInstance() : WoodMaterial.getInstance()));
         Rectangle r = new Rectangle(-width/2, -height/2, width, height);
         r.setFill(Color.GREEN);
         addVisual(r);

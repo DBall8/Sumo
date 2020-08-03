@@ -2,6 +2,7 @@ package physicsEngine;
 
 import customMath.CustomMath;
 import customMath.Vec2;
+import physicsEngine.material.Material;
 
 import java.util.List;
 
@@ -9,17 +10,24 @@ public class PhysicsCircle extends PhysicsObject{
 
     private float radius;
 
-    public PhysicsCircle(float x, float y, float radius, float gravity, float drag)
+    public PhysicsCircle(float x, float y, float radius, Material material, float gravity, float drag)
     {
-        super(gravity, drag);
+        super(material, gravity, drag);
         position = new Vec2(x, y);
         this.radius = radius;
 
         velocity = new Vec2(0, 0);
         angularVelocity = 0;
 
-        mass = (float)Math.PI * radius * radius * MASS_FACTOR;
-        invertedMass = 1.0f / mass;
+        mass = (float)Math.PI * radius * radius * MASS_FACTOR * material.getDensity();
+
+        if (mass == 0)
+        {
+            invertedMass = 0;
+        }
+        else {
+            invertedMass = 1.0f / mass;
+        }
     }
 
     @Override

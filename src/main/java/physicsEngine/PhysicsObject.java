@@ -9,6 +9,7 @@ import java.util.List;
 public abstract class PhysicsObject {
 
     protected final static float MASS_FACTOR = 0.000001f;
+    protected final static float GRACITY_SCALAR = 100;
 
     protected Vec2 position;
     protected float angle;           // In radiians
@@ -19,16 +20,17 @@ public abstract class PhysicsObject {
 
     protected Vec2 storedForces = new Vec2(0, 0);
 
+    protected Material material;
+
     protected float mass;
     protected float invertedMass;
 
     protected float gravity;
     protected float drag;
 
-    protected Material material = MetalMaterial.getInstance();
-
-    public PhysicsObject(float gravity, float drag)
+    public PhysicsObject(Material material, float gravity, float drag)
     {
+        this.material = material;
         this.gravity = gravity;
         this.drag = drag;
     }
@@ -87,6 +89,7 @@ public abstract class PhysicsObject {
 
     public void move(float time)
     {
+        if (mass <= 0) return; // Do not move static objects
         position.addX(time * velocity.getX());
         position.addY(time * velocity.getY());
 
@@ -96,15 +99,15 @@ public abstract class PhysicsObject {
         velocity.addY(time * acceleration.getY());
 
         // 0 velocity below a threshold
-        if (velocity.getX() < 0.01f && velocity.getX() > -0.01f)
-        {
-            velocity.setX(0);
-        }
-
-        if (velocity.getY() < 0.01f && velocity.getY() > -0.01f)
-        {
-            velocity.setY(0);
-        }
+//        if (velocity.getX() < 0.01f && velocity.getX() > -0.01f)
+//        {
+//            velocity.setX(0);
+//        }
+//
+//        if (velocity.getY() < 0.01f && velocity.getY() > -0.01f)
+//        {
+//            velocity.setY(0);
+//        }
     }
 
     /**
@@ -113,6 +116,7 @@ public abstract class PhysicsObject {
      */
     public void applyForce(Vec2 force)
     {
+        if (invertedMass <= 0) return;
         storedForces = storedForces.add(force);
     }
 
@@ -155,7 +159,7 @@ public abstract class PhysicsObject {
     {
         acceleration = new Vec2(
                 -1.0f * drag * velocity.getX(),
-                gravity - (drag * velocity.getY())
+                (GRACITY_SCALAR * gravity) - (drag * velocity.getY())
         );
     }
 }

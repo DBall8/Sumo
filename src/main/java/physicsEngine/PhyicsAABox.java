@@ -4,6 +4,7 @@ import customMath.CustomMath;
 import customMath.Line2;
 import customMath.Vec2;
 import javafx.scene.paint.Color;
+import physicsEngine.material.Material;
 import sumo.SumoGame;
 
 import java.util.List;
@@ -15,8 +16,8 @@ public class PhyicsAABox extends PhysicsObject {
 
     Line2[] lines = new Line2[4];
 
-    public PhyicsAABox(float x, float y, float width, float height, float gravity, float drag) {
-        super(gravity, drag);
+    public PhyicsAABox(float x, float y, float width, float height, Material material, float gravity, float drag) {
+        super(material, gravity, drag);
 
         position = new Vec2(x, y);
         this.width = width;
@@ -35,8 +36,14 @@ public class PhyicsAABox extends PhysicsObject {
         velocity = new Vec2(0, 0);
         angularVelocity = 0;
 
-        mass = width * height * MASS_FACTOR;
-        invertedMass = 1.0f / mass;
+        mass = width * height * MASS_FACTOR * material.getDensity();
+        if (mass <= 0)
+        {
+            invertedMass = 0;
+        }
+        else {
+            invertedMass = 1.0f / mass;
+        }
     }
 
     @Override
@@ -84,6 +91,73 @@ public class PhyicsAABox extends PhysicsObject {
 
     public void checkCollision(PhyicsAABox box, List<Collision> newCollisions)
     {
+        float dx = position.getX() - box.getX();
+        float dy = position.getY() - box.getY();
+        float distX = Math.abs(dx) - ((width + box.width) / 2.0f);
+        float distY =Math.abs(dy) - ((height + box.height) / 2.0f);
+
+        if (distX <= 0 && distY <= 0)
+        {
+            SumoGame.RESET_DBUG();
+            // Collision
+            if (distX > distY)
+            {
+                // less penetration on th x axis
+                float normalX = (dx > 0) ? 1 : -1;
+                Collision collision = new Collision(this, box, new Vec2(normalX, 0), -1.0f * distX);
+                newCollisions.add(collision);
+
+                float collisionY1 =  CustomMath.clamp(
+                        position.getY() - (height/2.0f),
+                        box.position.getY() - (box.height / 2.0f),
+                        box.position.getY() + (box.height / 2.0f)
+                );
+                float collisionY2 =  CustomMath.clamp(
+                        position.getY() + (height/2.0f),
+                        box.position.getY() - (box.height / 2.0f),
+                        box.position.getY() + (box.height / 2.0f)
+                );
+
+                float collisionX = (dx > 0) ?
+                        position.getX() - (width / 2.0f) :
+                        position.getX() + (width / 2.0f);
+
+                collision.addContactPoint(new Vec2(collisionX, collisionY1));
+                collision.addContactPoint(new Vec2(collisionX, collisionY2));
+
+//                SumoGame.ADD_DEBUG_DOT(collisionX, collisionY1, 5, Color.RED);
+//                SumoGame.ADD_DEBUG_DOT(collisionX, collisionY2, 5, Color.RED);
+            }
+            else
+            {
+                // less penetration on the y axis
+                float normalY = (dy > 0) ? 1 : -1;
+                Collision collision = new Collision(this, box, new Vec2(0, normalY), -1.0f * distY);
+                newCollisions.add(collision);
+
+                float collisionX1 =  CustomMath.clamp(
+                        position.getX() - (width/2.0f),
+                        box.position.getX() - (box.width / 2.0f),
+                        box.position.getX() + (box.width / 2.0f)
+                );
+                float collisionX2 =  CustomMath.clamp(
+                        position.getX() + (width/2.0f),
+                        box.position.getX() - (box.width / 2.0f),
+                        box.position.getX() + (box.width / 2.0f)
+                );
+
+                float collisionY = (dy > 0) ?
+                        position.getY() - (height / 2.0f) :
+                        position.getY() + (height / 2.0f);
+
+//                SumoGame.ADD_DEBUG_DOT(collisionX1, collisionY, 5, Color.RED);
+//                SumoGame.ADD_DEBUG_DOT(collisionX2, collisionY, 5, Color.RED);
+
+                collision.addContactPoint(new Vec2(collisionX1, collisionY));
+                collision.addContactPoint(new Vec2(collisionX2, collisionY));
+            }
+        }
+
         return;
     }
     public float getEarliestCollision(PhyicsAABox box, float time)

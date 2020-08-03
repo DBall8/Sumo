@@ -9,19 +9,27 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MouseUser extends Entity {
 
     boolean active = false;
-    MouseBinding mouseBinding;
+    MouseBinding leftMouseBinding;
+    MouseBinding rightMouseBinding;
 
-    Character[] characters;
+    List<Character> characters;
     Character selecteCharacter = null;
     Line l;
 
-    public MouseUser(UserInputHandler inputHandler, Character[] characters)
+    SumoGame owner;
+
+    public MouseUser(UserInputHandler inputHandler, List<Character> characters, SumoGame owner)
     {
-        mouseBinding = inputHandler.createMouseListener(MouseButton.PRIMARY);
+        leftMouseBinding = inputHandler.createMouseListener(MouseButton.PRIMARY);
+        rightMouseBinding = inputHandler.createMouseListener(MouseButton.SECONDARY);
         this.characters = characters;
+        this.owner = owner;
 
         l = new Line(0, 0, 0, 0);
         l.setStrokeWidth(2);
@@ -32,16 +40,16 @@ public class MouseUser extends Entity {
     @Override
     public void update()
     {
-        if (!active && mouseBinding.isPressed())
+        if (!active && leftMouseBinding.isPressed())
         {
-            mouseBinding.consumeClick();
+            leftMouseBinding.consumeClick();
             for (Character c: characters)
             {
                 float distanceSquared = CustomMath.getDistSquared(
                         c.getWorldX(),
                         c.getWorldY(),
-                        mouseBinding.getMouseX(),
-                        mouseBinding.getMouseY());
+                        leftMouseBinding.getMouseX(),
+                        leftMouseBinding.getMouseY());
 
                 if (distanceSquared < c.getRadius() * c.getRadius())
                 {
@@ -52,11 +60,11 @@ public class MouseUser extends Entity {
             }
         }
 
-        if (active && !mouseBinding.isPressed())
+        if (active && !leftMouseBinding.isPressed())
         {
             Vec2 force = new Vec2(
-                    selecteCharacter.getWorldX() - mouseBinding.getMouseX(),
-                    selecteCharacter.getWorldY() - mouseBinding.getMouseY());
+                    selecteCharacter.getWorldX() - leftMouseBinding.getMouseX(),
+                    selecteCharacter.getWorldY() - leftMouseBinding.getMouseY());
 
             selecteCharacter.applyForce(force);
             selecteCharacter = null;
@@ -70,10 +78,17 @@ public class MouseUser extends Entity {
 
         if (active)
         {
-            l.setStartX(mouseBinding.getMouseX());
-            l.setStartY(mouseBinding.getMouseY());
+            l.setStartX(leftMouseBinding.getMouseX());
+            l.setStartY(leftMouseBinding.getMouseY());
             l.setEndX(selecteCharacter.getWorldX());
             l.setEndY(selecteCharacter.getWorldY());
+        }
+
+        if (rightMouseBinding.isClicked())
+        {
+            rightMouseBinding.consumeClick();
+
+            owner.addCharacter(rightMouseBinding.getMouseX(), rightMouseBinding.getMouseY());
         }
     }
 }

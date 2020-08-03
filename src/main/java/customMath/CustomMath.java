@@ -52,6 +52,13 @@ public class CustomMath {
         }
     }
 
+    public static float clamp(float value, float min, float max)
+    {
+        if (value < min) return min;
+        else if (value > max) return max;
+        return value;
+    }
+
     /**
      * Cast a ray from a point in a direction. Find the distance between the ray point and the first intersection on the
      * circle's perimeter
@@ -95,5 +102,34 @@ public class CustomMath {
 
         // NOTE if normalDist is negative, then the ray originates from inside the circle
         return new RayCastResult(true, distance);
+    }
+
+    public static RayCastResult rayCastToSegmentWithRadius(Vec2 rayPoint, Vec2 rayDirection, Line2 segment, float radius)
+    {
+        RayCastResult result = new RayCastResult(false, 0);
+
+        // Normalize segment so that the ray point is at 0,0
+        Vec2 linePoint1 = segment.getP1().sub(rayPoint);
+        Vec2 linePoint2 = segment.getP2().sub(rayPoint);
+
+        float linePointTangent1 = linePoint1.dot(rayDirection.getTangent());
+        float linePointTangent2 = linePoint2.dot(rayDirection.getTangent());
+
+        if ((linePointTangent1 < 0 && linePointTangent2 > 0) ||
+            (linePointTangent1 > 0 && linePointTangent2 < 0))
+        {
+            //  Ray intersects the segment directly
+        }
+        else
+        {
+            // Does not intersect segment direct, check if it gets within the radius of one of the endpoints
+            if (Math.abs(linePointTangent1) > radius && Math.abs(linePointTangent2) > radius)
+            {
+                // No intersection
+                return result;
+            }
+        }
+
+        return result;
     }
 }

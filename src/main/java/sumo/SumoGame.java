@@ -7,6 +7,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import physicsEngine.PhysicsWorld;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SumoGame extends GameEngine {
 
     private int WINDOW_WIDTH = 1000;
@@ -15,7 +18,7 @@ public class SumoGame extends GameEngine {
     private final static float ORIGINAL_FRAME_RATE = 60.0f;
     private final static int FRAME_RATE = 120;
 
-    private final static int NUM_CHARACTERS = 15;
+    private final static int NUM_CHARACTERS = 1;
 
     PhysicsWorld physicsWorld;
 
@@ -24,7 +27,7 @@ public class SumoGame extends GameEngine {
 
     MouseUser mouseControl;
 
-    Character[] characters;
+    List<Character> characters = new ArrayList<>();
 
     static SumoGame debugInstance;
 
@@ -49,22 +52,25 @@ public class SumoGame extends GameEngine {
 
         debugInstance = this;
 
-        physicsWorld = new PhysicsWorld(FRAME_RATE, 0.0f, 0.8f);
+        physicsWorld = new PhysicsWorld(FRAME_RATE, 10f, 0.8f);
     }
 
     @Override
     protected void onStart()
     {
-        p1 = new Player(1, 0, 0, getUserInputHandler(), this);
-        addEntity(p1);
+//        p1 = new Player(1, 0, 0, getUserInputHandler(), this);
+//        addEntity(p1);
 
-//        p2 = new Player(2, 500, 300, getUserInputHandler(), this);
-//        addEntity(p2);
+        p2 = new Player(2, 500, 300, getUserInputHandler(), this);
+        addEntity(p2);
 
         createRandomCharacters(NUM_CHARACTERS);
 
-        mouseControl = new MouseUser(getUserInputHandler(), characters);
+        mouseControl = new MouseUser(getUserInputHandler(), characters, this);
         addEntity(mouseControl);
+
+        Character test = new Character(WINDOW_WIDTH/2, WINDOW_HEIGHT - 10, WINDOW_WIDTH, 20, true, this);
+        addEntity(test);
     }
 
     @Override
@@ -99,26 +105,35 @@ public class SumoGame extends GameEngine {
 
     private void createRandomCharacters(int numCharacters)
     {
-        characters = new Character[numCharacters];
         for (int i=0; i<numCharacters; i++)
         {
             float x = (float) (Math.random() * getWindowDim().getX());
             float y = (float) (Math.random() * getWindowDim().getY());
             float size = (float) (Math.random() * 45 + 5);
 
-            float shape = (float)Math.random();
-            if (shape < 0.5)
-            {
+            Character c;
 
-                characters[i] = new Character(x, y, size, this);
+            float shape = (float)Math.random();
+            if (shape < -0.5)
+            {
+                c = new Character(x, y, size, this);
             }
             else
             {
                 float height = (float) (Math.random() * 45 + 5);
-                characters[i] = new Character(x, y, size, height,this);
+                c = new Character(x, y, size, height, false, this);
             }
 
-            addEntity(characters[i]);
+            characters.add(c);
+            addEntity(c);
         }
+    }
+
+    public void addCharacter(float x, float y)
+    {
+        float size = (float)(Math.random() * 45 + 5);
+        Character c = new Character(x, y, size, size, false, this);
+        characters.add(c);
+        addEntity(c);
     }
 }

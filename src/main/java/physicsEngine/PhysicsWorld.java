@@ -1,12 +1,14 @@
 package physicsEngine;
 
+import physicsEngine.material.Material;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class PhysicsWorld {
 
-    private final static boolean CCD = true;
+    private final static boolean CCD = false;
 
     private List<PhysicsObject> physicsObjects = new ArrayList<>();
     private int numObjects;
@@ -28,18 +30,18 @@ public class PhysicsWorld {
         this.timeAccumulator = 0;
     }
 
-    public PhysicsCircle addCircle(float x, float y, float radius)
+    public PhysicsCircle addCircle(float x, float y, float radius, Material material)
     {
-        PhysicsCircle circle = new PhysicsCircle(x, y, radius, gravity, drag);
+        PhysicsCircle circle = new PhysicsCircle(x, y, radius, material, gravity, drag);
         physicsObjects.add(circle);
         numObjects++;
 
         return circle;
     }
 
-    public PhyicsAABox addAABox(float x, float y, float width, float height)
+    public PhyicsAABox addAABox(float x, float y, float width, float height, Material material)
     {
-        PhyicsAABox box = new PhyicsAABox(x, y, width, height, gravity, drag);
+        PhyicsAABox box = new PhyicsAABox(x, y, width, height, material, gravity, drag);
         physicsObjects.add(box);
         numObjects++;
 

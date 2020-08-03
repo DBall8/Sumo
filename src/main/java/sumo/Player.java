@@ -8,7 +8,9 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Rectangle;
 import physicsEngine.PhysicsObject;
+import physicsEngine.material.MetalMaterial;
 
 public class Player extends Entity {
 
@@ -41,11 +43,19 @@ public class Player extends Entity {
 
         float size = WIDTH;
 
-        object = owner.getPhysicsWorld().addCircle(x, y, size);
-
-        Circle c = new Circle(0, 0, size);
-        c.setFill(Color.BLUE);
-        addVisual(c);
+        if (id == 1) {
+            object = owner.getPhysicsWorld().addCircle(x, y, size, MetalMaterial.getInstance());
+            Circle c = new Circle(0, 0, size);
+            c.setFill(Color.BLUE);
+            addVisual(c);
+        }
+        else
+        {
+            object = owner.getPhysicsWorld().addAABox(x, y, size, size, MetalMaterial.getInstance());
+            Rectangle r = new Rectangle(-size/2, -size/2, size, size);
+            r.setFill(Color.BLUE);
+            addVisual(r);
+        }
     }
 
     private void setupKeys(UserInputHandler inputHandler)

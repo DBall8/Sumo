@@ -34,6 +34,13 @@ public class Collision {
     {
         correctPosition();
 
+        if (penetration < 0.01f)
+        {
+            return;
+        }
+
+        float restitution = (object1.material.getRestitution() + object2.material.getRestitution()) / 2.0f;
+
         // In the linear direction of the collision:
         // Conservation of momentum:
         // m1*u1 + m2*u2 = m1*v1 + m2*v2
@@ -53,10 +60,35 @@ public class Collision {
         float u2 = object2.velocity.dot(collisionVector);
         float massSum = object1.mass + object2.mass;
 
-        float v1 = ((2.0f * object2.mass * u2) + ((object1.mass - object2.mass) * u1))
-                / massSum;
-        float v2 = ((2.0f * object1.mass * u1) + ((object2.mass - object1.mass) * u2))
-                / massSum;
+        if (u1 >=0 && u2 <= 0)
+        {
+            return;
+        }
+
+        float v1;
+        float v2;
+        if (object1.mass <= 0)
+        {
+            v1 = 0;
+            v2 = -u2;
+        }
+        else if (object2.mass <= 0)
+        {
+            v2 = 0;
+            v1 = -u1;
+        }
+        else
+        {
+            v1 = ((2.0f * object2.mass * u2) + ((object1.mass - object2.mass) * u1))
+                    / massSum;
+            v2 = ((2.0f * object1.mass * u1) + ((object2.mass - object1.mass) * u2))
+                    / massSum;
+        }
+
+        // Degrade the change in velocity by the resitution factor
+        // (represents loss of energy in impact due to heat, deformation based on materials)
+        v1 = (v1 - u1) * restitution + u1;
+        v2 = (v2 - u2) * restitution + u2;
 
         Vec2 v1Vector = collisionVector.copy();
         v1Vector.mult(v1);
@@ -77,11 +109,23 @@ public class Collision {
     private void correctPosition()
     {
         Vec2 correctionVector = collisionVector.copy();
+
+        // Double penetration if one of the objects is static, since it will not move
+        if (object1.mass <= 0 || object2.mass <= 0)
+        {
+            penetration *= 2.0f;
+        }
         correctionVector.mult(penetration * POS_CORECTION_PERCENT);
 
-        object1.position.addX(correctionVector.getX());
-        object1.position.addY(correctionVector.getY());
-        object2.position.addX(-1.0f * correctionVector.getX());
-        object2.position.addY(-1.0f * correctionVector.getY());
+        if (object1.mass > 0)
+        {
+            object1.position.addX(correctionVector.getX());
+            object1.position.addY(correctionVector.getY());
+        }
+
+        if (object2.mass > 0) {
+            object2.position.addX(-1.0f * correctionVector.getX());
+            object2.position.addY(-1.0f * correctionVector.getY());
+        }
     }
 }
