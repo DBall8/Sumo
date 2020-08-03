@@ -15,7 +15,7 @@ public class SumoGame extends GameEngine {
     private final static float ORIGINAL_FRAME_RATE = 60.0f;
     private final static int FRAME_RATE = 120;
 
-    private final static int NUM_CHARARACTERS = 15;
+    private final static int NUM_CHARACTERS = 15;
 
     PhysicsWorld physicsWorld;
 
@@ -58,10 +58,10 @@ public class SumoGame extends GameEngine {
         p1 = new Player(1, 0, 0, getUserInputHandler(), this);
         addEntity(p1);
 
-        p2 = new Player(2, 500, 300, getUserInputHandler(), this);
-        addEntity(p2);
+//        p2 = new Player(2, 500, 300, getUserInputHandler(), this);
+//        addEntity(p2);
 
-        createRandomCharacters(NUM_CHARARACTERS);
+        createRandomCharacters(NUM_CHARACTERS);
 
         mouseControl = new MouseUser(getUserInputHandler(), characters);
         addEntity(mouseControl);
@@ -107,7 +107,7 @@ public class SumoGame extends GameEngine {
             float size = (float) (Math.random() * 45 + 5);
 
             float shape = (float)Math.random();
-            if (shape < 10.5)
+            if (shape < 0.5)
             {
 
                 characters[i] = new Character(x, y, size, this);

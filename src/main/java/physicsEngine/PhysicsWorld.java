@@ -70,7 +70,7 @@ public class PhysicsWorld {
 
         if (CCD) {
             float timeLeft = time;
-            while (timeLeft > 0.0000001f) {
+            while (timeLeft > (time / 1000.0f)) {
                 float step = findEarliestCollision(timeLeft);
                 move(time);
                 checkCollisions();
@@ -108,11 +108,6 @@ public class PhysicsWorld {
                 float t = o1.getEarliestCollision(o2, time);
                 if (t < earliestTime) earliestTime = t;
             }
-        }
-
-        if (earliestTime < time)
-        {
-            System.out.println(earliestTime);
         }
 
         return earliestTime;

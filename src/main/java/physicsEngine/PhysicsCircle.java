@@ -49,9 +49,6 @@ public class PhysicsCircle extends PhysicsObject{
     @Override
     public float getEarliestCollision(PhysicsCircle circle, float time) {
 
-        // Circle 2's position when the origin is set to circle 1's position
-        Vec2 relativePosition = circle.position.sub(position);
-
         // Circle 1's velocity if circle 2 is the reference point
         Vec2 relativeVelocity = velocity.sub(circle.velocity);
         Vec2 velocityNormal = relativeVelocity.copy().normalize();
@@ -59,51 +56,33 @@ public class PhysicsCircle extends PhysicsObject{
         float relativeVelocityMagnitude = relativeVelocity.getMagnitude();
         if (relativeVelocityMagnitude <= 0)
         {
-//            System.out.println("Mag 0");
             return time;
         }
 
         float radiusSum = radius + circle.radius;
 
-        // Distance from point to perpendicular intersection of circle
-        float normalDot = relativePosition.dot(velocityNormal);
+        // Cast a ray from Circle 1 in the direction of Circle 1's relative velocity
+        // To treat Circle 1 as a point, let Circle 2's radius be the sum of both radii
+        CustomMath.RayCastResult result = CustomMath.rayCastToCircle(position, velocityNormal, circle.position, radiusSum);
 
-        Vec2 tangent = velocityNormal.getTangent();
-        float tangentDot = tangent.dot(relativePosition);
-        if (Math.abs(tangentDot) > radiusSum ||
-            normalDot < 0)
+        if (!result.intersects)
         {
-            // Will not collide
+            // Will not collide at current trajectories
             return time;
         }
 
-        // Will eventually collide
-
-        // Distance to intersection on the circle
-        float normalDist = normalDot - (float)Math.sqrt((radiusSum * radiusSum) - (tangentDot * tangentDot));
-
-        // NOT GOOD
-        if (normalDist < 0)
+        if (result.intersectionDistance < 0)
         {
             // Overlapping, need to cause a collision NOW
             return 0;
         }
 
-        float collisionTime = normalDist / relativeVelocityMagnitude;
-
-//        System.out.println(collisionTime);
-
-//        System.out.format("Dist: %.2f, V: %.2f, Time: %.5f\n", normalDist,relativeVelocityMagnitude, collisionTime);
+        float collisionTime = result.intersectionDistance / relativeVelocityMagnitude;
 
         if (collisionTime < time)
         {
-            System.out.println("CLOSE -------------------------------");
-
-
             return collisionTime;
         }
-
-//        System.out.format("Large time: %.5f\n", collisionTime);
 
         return time;
     }

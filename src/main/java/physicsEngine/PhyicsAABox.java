@@ -3,6 +3,8 @@ package physicsEngine;
 import customMath.CustomMath;
 import customMath.Line2;
 import customMath.Vec2;
+import javafx.scene.paint.Color;
+import sumo.SumoGame;
 
 import java.util.List;
 
@@ -20,10 +22,10 @@ public class PhyicsAABox extends PhysicsObject {
         this.width = width;
         this.height = height;
 
-        Vec2 p1 = new Vec2(-width/2, -width/2);
-        Vec2 p2 = new Vec2(width/2, -width/2);
-        Vec2 p3 = new Vec2(width/2,  width/2);
-        Vec2 p4 = new Vec2(-width/2, width/2);
+        Vec2 p1 = new Vec2(-width/2, -height/2);
+        Vec2 p2 = new Vec2(width/2, -height/2);
+        Vec2 p3 = new Vec2(width/2,  height/2);
+        Vec2 p4 = new Vec2(-width/2, height/2);
 
         lines[0] = new Line2(p1, p2);
         lines[1] = new Line2(p2, p3);
@@ -40,58 +42,34 @@ public class PhyicsAABox extends PhysicsObject {
     @Override
     public void checkCollision(PhysicsCircle circle, List<Collision> newCollisions)
     {
-//        float dx = Math.abs(circle.position.getX() - position.getX()) - width/2 - circle.getRadius();
-//        float dy = Math.abs(circle.position.getY() - position.getY()) - height/2 - circle.getRadius();
-//
-//        if (dx <= 0 && dy <=0)
-//        {
-//            System.out.println("COLLIDE");
-//            // Collision
-//            Vec2 collisionFace1;
-//            Vec2 collisionFace2;
-//            float penetration;
-//            if (dx > dy)
-//            {
-//                penetration = -1.0f * dx;
-//                // Closest side is left or right
-//                if (circle.position.getX() > position.getX())
-//                {
-//                    // Closest side is right
-//                    collisionFace1 = new Vec2(position.getX() + width/2, position.getY() - height/2);
-//                    collisionFace2 = new Vec2(position.getX() + width/2, position.getY() + height/2);
-//                }
-//                else
-//                {
-//                    // closest side is left
-//                    collisionFace1 =  new Vec2(position.getX() - width/2, position.getY() - height/2);
-//                    collisionFace2 =  new Vec2(position.getX() - width/2, position.getY() + height/2);
-//                }
-//            }
-//            else
-//            {
-//                penetration = -1.0f * dy;
-//                // Closest side is top or bottom
-//                if (circle.position.getY() > position.getY())
-//                {
-//                    // Closest side is top
-//                    collisionFace1 = new  Vec2(position.getX() + width/2, position.getY() - height/2);
-//                    collisionFace2 = new  Vec2(position.getX() - width/2, position.getY() - height/2);
-//                }
-//                else
-//                {
-//                    // closest side is bottom
-//                    collisionFace1 = new  Vec2(position.getX() + width/2, position.getY() + height/2);
-//                    collisionFace2 = new  Vec2(position.getX() - width/2, position.getY() + height/2);
-//                }
-//            }
-//
-//            Vec2 outwards = collisionFace1.sub(position);
-//            Vec2 collisionNormal = collisionFace2.sub(collisionFace1).getTangentTowards(outwards);
-//            collisionNormal.normalize();
-//
-//            Collision collision = new Collision(this, circle, collisionNormal, penetration);
-//            collision.addContactPoint(getClosestPointOnLine(collisionFace1, collisionFace2, circle.position));
-//        }
+        // Find the closest point to the circle across all sides
+        float radiusSqr = circle.getRadius() * circle.getRadius();
+        float closestDistanceSqr = Float.MAX_VALUE;
+        Vec2 closestPoint = null;
+        for (Line2 line: lines)
+        {
+            Vec2 p = getClosestPointOnLine(line.getP1().add(position), line.getP2().add(position), circle.position);
+            float distanceToLineSqr = CustomMath.getDistSquared(p, circle.position);
+            if (distanceToLineSqr < closestDistanceSqr)
+            {
+                closestDistanceSqr = distanceToLineSqr;
+                closestPoint = p;
+            }
+        }
+
+        // Collision if the closest point is closer than the radius
+        if (closestDistanceSqr < radiusSqr)
+        {
+            // Collision
+            float penetration = circle.getRadius() - (float)Math.sqrt(closestDistanceSqr);
+            Vec2 collisionNormal = circle.position.sub(closestPoint);
+            collisionNormal.normalize();
+
+            Collision collision = new Collision(circle, this, collisionNormal, penetration);
+            collision.addContactPoint(closestPoint);
+
+            newCollisions.add(collision);
+        }
     }
 
     @Override
