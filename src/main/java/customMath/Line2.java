@@ -19,4 +19,9 @@ public class Line2 {
     public Vec2 getP1(){ return p1; }
 
     public Vec2 getP2() { return p2; }
+
+    public Line2 add(Vec2 addVec)
+    {
+        return new Line2(p1.add(addVec), p2.add(addVec));
+    }
 }

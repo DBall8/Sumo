@@ -1,5 +1,9 @@
 package customMath;
 
+import javafx.scene.Group;
+import javafx.scene.paint.Color;
+import sumo.SumoGame;
+
 public class CustomMath {
 
     public static float getDistSquared(Vec2 v1, Vec2 v2)
@@ -59,11 +63,23 @@ public class CustomMath {
         return value;
     }
 
+    public static float min(float value1, float value2)
+    {
+        if (value1 < value2) return value1;
+        return value2;
+    }
+
+    public static float max(float value1, float value2)
+    {
+        if (value1 < value2) return value2;
+        return value1;
+    }
+
     /**
      * Cast a ray from a point in a direction. Find the distance between the ray point and the first intersection on the
      * circle's perimeter
      * @param rayPoint      Source of ray
-     * @param rayDirection  Direction ray travels in, must be normalized
+     * @param rayDirection  Direction ray travels in
      * @param circlePoint   Center of circle
      * @param circleRadius  Radius of circle
      * @return  -1 if ray does not intersect circle, otherwise, the distance point from the ray to the circle intersection
@@ -73,6 +89,7 @@ public class CustomMath {
 
         // Circle's position when the origin is set to the point's position
         Vec2 relativePosition = circlePoint.sub(rayPoint);
+        rayDirection.normalize();
 
         // Distance from point to perpendicular intersection of circle
         float normalDot = relativePosition.dot(rayDirection);
@@ -104,32 +121,98 @@ public class CustomMath {
         return new RayCastResult(true, distance);
     }
 
+    public static RayCastResult rayCastToSegment(Vec2 rayPoint, Vec2 rayDirection, Vec2 linePoint1, Vec2 linePoint2)
+    {
+        // Circle 2's position when the origin is set to circle 1's position
+        linePoint1 = linePoint1.sub(rayPoint);
+        linePoint2 = linePoint2.sub(rayPoint);
+
+        Vec2 rayNormal = rayDirection.normalize();
+        Vec2 rayTangent = rayDirection.getTangent();
+
+        // If both points are behind, there will be no intersection
+        if (rayNormal.dot(linePoint1) < 0 &&
+                rayNormal.dot(linePoint2) < 0) return new RayCastResult(false, 0);
+
+        float linePoint1Tangent = linePoint1.dot(rayTangent);
+        float linePoint2Tangent = linePoint2.dot(rayTangent);
+
+        if ((linePoint1Tangent <= 0 && linePoint2Tangent >= 0) ||
+                (linePoint1Tangent >= 0 && linePoint2Tangent <= 0))
+        {
+            // Ray intersects segment
+            float tangentSum = Math.abs(linePoint1Tangent) + Math.abs(linePoint2Tangent);
+
+            if (tangentSum == 0)
+            {
+                // Line is parallel and overlaps ray
+                float intersectionDistanceSqr = CustomMath.min(linePoint1.getMagnitudeSquared(), linePoint2.getMagnitudeSquared());
+                return new RayCastResult(true, (float)Math.sqrt(intersectionDistanceSqr));
+            }
+
+            float tangentRatio = Math.abs(linePoint1Tangent) / tangentSum;
+            Vec2 lineVector = linePoint2.sub(linePoint1);
+            float adjustmentMag = tangentRatio * lineVector.getMagnitude();
+
+            lineVector.normalize();
+
+            Vec2 intersection =  new Vec2(linePoint1.getX() + (adjustmentMag * lineVector.getX()),
+                    linePoint1.getY() + (adjustmentMag * lineVector.getY()));
+
+            // Return null if intersection point is behind
+            if (intersection.dot(rayNormal) < 0) return new RayCastResult(false, 0);;
+
+            //Vec2 intersectionPoint = intersection.add(rayPoint);
+            return new RayCastResult(true, intersection.getMagnitude());
+        }
+
+        return new RayCastResult(false, 0);
+    }
+
     public static RayCastResult rayCastToSegmentWithRadius(Vec2 rayPoint, Vec2 rayDirection, Line2 segment, float radius)
     {
-        RayCastResult result = new RayCastResult(false, 0);
-
         // Normalize segment so that the ray point is at 0,0
         Vec2 linePoint1 = segment.getP1().sub(rayPoint);
         Vec2 linePoint2 = segment.getP2().sub(rayPoint);
 
-        float linePointTangent1 = linePoint1.dot(rayDirection.getTangent());
-        float linePointTangent2 = linePoint2.dot(rayDirection.getTangent());
+        Vec2 towardsPoint = linePoint1.copy();
+        towardsPoint.mult(-1.0f);
+        Vec2 lineTangentTowardsPoint = linePoint2.sub(linePoint1).getTangentTowards(towardsPoint);
+        lineTangentTowardsPoint.normalize();
+        lineTangentTowardsPoint.mult(radius);
 
-        if ((linePointTangent1 < 0 && linePointTangent2 > 0) ||
-            (linePointTangent1 > 0 && linePointTangent2 < 0))
+        linePoint1 = linePoint1.add(lineTangentTowardsPoint);
+        linePoint2 = linePoint2.add(lineTangentTowardsPoint);
+
+//        SumoGame.ADD_DEBUG_DOT(linePoint1.getX() + rayPoint.getX(), linePoint1.getY() + rayPoint.getY(), 5, Color.RED);
+//        SumoGame.ADD_DEBUG_DOT(linePoint2.getX() + rayPoint.getX(), linePoint2.getY() + rayPoint.getY(), 5, Color.RED);
+
+        RayCastResult lineResult = rayCastToSegment(rayPoint, rayDirection, linePoint1.add(rayPoint), linePoint2.add(rayPoint));
+        if (lineResult.intersects)
         {
-            //  Ray intersects the segment directly
+            return lineResult;
+        }
+
+        RayCastResult point1Result = rayCastToCircle(rayPoint, rayDirection, segment.getP1(), radius);
+        RayCastResult point2Result = rayCastToCircle(rayPoint, rayDirection, segment.getP2(), radius);
+        if (point1Result.intersects && point2Result.intersects)
+        {
+            if (point1Result.intersectionDistance < point2Result.intersectionDistance)
+            {
+                return  point1Result;
+            }
+            else
+            {
+                return point2Result;
+            }
+        }
+        else if (point1Result.intersects)
+        {
+            return point1Result;
         }
         else
         {
-            // Does not intersect segment direct, check if it gets within the radius of one of the endpoints
-            if (Math.abs(linePointTangent1) > radius && Math.abs(linePointTangent2) > radius)
-            {
-                // No intersection
-                return result;
-            }
+            return point2Result;
         }
-
-        return result;
     }
 }

@@ -3,8 +3,10 @@ package sumo;
 import customMath.Vec2;
 import gameEngine.Entity;
 import gameEngine.userInput.KeyBinding;
+import gameEngine.userInput.MouseBinding;
 import gameEngine.userInput.UserInputHandler;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
@@ -14,9 +16,10 @@ import physicsEngine.material.MetalMaterial;
 
 public class Player extends Entity {
 
-    private static final int WIDTH = 30;
+    private static final int WIDTH = 15;
     private static final int HEIGHT = 200;
     private static final float AXIS_FORCE = 1;
+    private static final int FIRE_SPEED = 10000;
 
     private static float axisForce;
 
@@ -28,6 +31,11 @@ public class Player extends Entity {
     KeyBinding down;
     KeyBinding left;
     KeyBinding right;
+    KeyBinding boost;
+    KeyBinding fire;
+    MouseBinding mouse;
+
+    int cooldown = 0;
 
     SumoGame owner;
 
@@ -51,8 +59,8 @@ public class Player extends Entity {
         }
         else
         {
-            object = owner.getPhysicsWorld().addAABox(x, y, size, size, MetalMaterial.getInstance());
-            Rectangle r = new Rectangle(-size/2, -size/2, size, size);
+            object = owner.getPhysicsWorld().addAABox(x, y, size*2, size*2, MetalMaterial.getInstance());
+            Rectangle r = new Rectangle(-size, -size, size*2, size*2);
             r.setFill(Color.BLUE);
             addVisual(r);
         }
@@ -60,11 +68,13 @@ public class Player extends Entity {
 
     private void setupKeys(UserInputHandler inputHandler)
     {
+        mouse = inputHandler.createMouseListener(MouseButton.NONE);
         if (playerId == 1) {
             up = inputHandler.createKeyBinding(KeyCode.W);
             down = inputHandler.createKeyBinding(KeyCode.S);
             left = inputHandler.createKeyBinding(KeyCode.A);
             right = inputHandler.createKeyBinding(KeyCode.D);
+            fire = inputHandler.createKeyBinding(KeyCode.F);
         }
         else
         {
@@ -72,32 +82,36 @@ public class Player extends Entity {
             down = inputHandler.createKeyBinding(KeyCode.DOWN);
             left = inputHandler.createKeyBinding(KeyCode.LEFT);
             right = inputHandler.createKeyBinding(KeyCode.RIGHT);
+            fire = inputHandler.createKeyBinding(KeyCode.SHIFT);
         }
+
+        boost = inputHandler.createKeyBinding(KeyCode.SPACE);
     }
 
     @Override
     public void update()
     {
         Vec2 force = new Vec2(0, 0);
+        float boostAmount = (boost.isPressed()) ? 1000 : 1;
 
         if (up.isPressed())
         {
-            force.addY(-axisForce);
+            force.addY(-axisForce * boostAmount);
         }
 
         if (down.isPressed())
         {
-            force.addY(axisForce);
+            force.addY(axisForce * boostAmount);
         }
 
         if (left.isPressed())
         {
-            force.addX(-axisForce);
+            force.addX(-axisForce * boostAmount);
         }
 
         if (right.isPressed())
         {
-            force.addX(axisForce);
+            force.addX(axisForce * boostAmount);
         }
 
         if (object.getX() < 0)
@@ -109,19 +123,34 @@ public class Player extends Entity {
             object.setX(0);
         }
 
-        if (object.getY() < 0)
+        if (fire.isPressed() && cooldown <= 0)
         {
-            object.setY(owner.getWindowDim().getY());
+            Vec2 direction = new Vec2(mouse.getMouseX() - x, mouse.getMouseY() - y);
+            direction.normalize();
+            Character c = new Character(x + WIDTH*2, y, 5, false, owner);
+            c.getPhysicsObject().applyForce(new Vec2(direction.getX() * FIRE_SPEED, direction.getY() * FIRE_SPEED));
+            owner.addCharacter(c);
+
+            cooldown = 30;
         }
-        else if (object.getY() > owner.getWindowDim().getY())
-        {
-            object.setY(0);
-        }
+
+        if (cooldown > 0) cooldown--;
+
+//        if (object.getY() < 0)
+//        {
+//            object.setY(owner.getWindowDim().getY());
+//        }
+//        else if (object.getY() > owner.getWindowDim().getY())
+//        {
+//            object.setY(0);
+//        }
 
 
         this.x = object.getX();
         this.y = object.getY();
         this.orientation = object.getAngleRads() * 180 / (float)Math.PI;
+
+        //System.out.println(y);
 
         object.applyForce(force);
     }

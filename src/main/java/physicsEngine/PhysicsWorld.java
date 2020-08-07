@@ -1,5 +1,6 @@
 package physicsEngine;
 
+import customMath.CustomMath;
 import physicsEngine.material.Material;
 
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.List;
 public class PhysicsWorld {
 
     private final static boolean CCD = false;
+    private final static float MIN_TIME_STEP_FRACTION = 100f;
 
     private List<PhysicsObject> physicsObjects = new ArrayList<>();
     private int numObjects;
@@ -70,13 +72,25 @@ public class PhysicsWorld {
     {
         updateForces(time);
 
+        float minStep = time / MIN_TIME_STEP_FRACTION;
+
         if (CCD) {
             float timeLeft = time;
-            while (timeLeft > (time / 1000.0f)) {
-                float step = findEarliestCollision(timeLeft);
-                move(time);
+            while (timeLeft > 0) {
+                // Find the time until the first collision will happen
+                // Clamp between the remaining time to simulate, and above the min step
+                float step = CustomMath.max(findEarliestCollision(timeLeft), minStep);
+
+                // Simulate up to this point
+                move(step);
                 checkCollisions();
 
+//                if (step < time)
+//                {
+//                    System.out.println(step);
+//                }
+
+                // Subtract time simulated from remaining time to simulate
                 timeLeft -= step;
             }
         }
@@ -111,6 +125,11 @@ public class PhysicsWorld {
                 if (t < earliestTime) earliestTime = t;
             }
         }
+
+//        if (earliestTime < time)
+//        {
+//            System.out.println(earliestTime);
+//        }
 
         return earliestTime;
     }

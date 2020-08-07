@@ -2,6 +2,7 @@ package customMath;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import sumo.SumoGame;
 
 public class Polygon {
@@ -77,5 +78,18 @@ public class Polygon {
 //        SumoGame.ADD_DEBUG_DOT(averageMidpoint.getX(), averageMidpoint.getY(), 20, Color.RED);
 
         return averageMidpoint;
+    }
+
+    public Vec2 getPoint(int index)
+    {
+        if (index >= numPoints) return null;
+        return points[index];
+    }
+
+    public Line2 getLine(int index)
+    {
+        if (index >= numPoints) return null;
+        int endIndex = ((index + 1) >= numPoints) ? 0 : (index + 1);
+        return new Line2(points[index], points[endIndex]);
     }
 }

@@ -17,12 +17,12 @@ public class Character extends Entity {
     private float size;
 
     private PhysicsObject object;
-    public Character(float x, float y, float size, SumoGame owner)
+    public Character(float x, float y, float size, boolean isStatic, SumoGame owner)
     {
         this.owner = owner;
         this.size = size;
 
-        object = owner.getPhysicsWorld().addCircle(x, y, size, WoodMaterial.getInstance());
+        object = owner.getPhysicsWorld().addCircle(x, y, size, (isStatic ? StaticMaterial.getInstance() : MetalMaterial.getInstance()));
         Circle c = new Circle(0, 0, size);
         c.setFill(Color.GREEN);
         addVisual(c);
@@ -82,4 +82,6 @@ public class Character extends Entity {
 
         this.orientation = object.getAngleRads() * 180 / (float)Math.PI;
     }
+
+    public PhysicsObject getPhysicsObject(){ return object; }
 }

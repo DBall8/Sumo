@@ -32,12 +32,9 @@ public class Collision {
 
     public void resolve()
     {
+//        System.out.format("Before (%f,%f) and (%f,%f)\n", object1.getX(), object1.getY(), object2.getX(), object2.getY());
         correctPosition();
-
-        if (penetration < 0.01f)
-        {
-            return;
-        }
+//        System.out.format("After (%f,%f) and (%f,%f)\n", object1.getX(), object1.getY(), object2.getX(), object2.getY());
 
         float restitution = (object1.material.getRestitution() + object2.material.getRestitution()) / 2.0f;
 
@@ -53,11 +50,11 @@ public class Collision {
 
         // Velocity tangential to the collision, will remain unchanged
         Vec2 tangent = collisionVector.getTangent();
-        float t1 = object1.velocity.dot(tangent);
-        float t2 = object2.velocity.dot(tangent);
+        float t1 = object1.getVelocity().dot(tangent);
+        float t2 = object2.getVelocity().dot(tangent);
 
-        float u1 = object1.velocity.dot(collisionVector);
-        float u2 = object2.velocity.dot(collisionVector);
+        float u1 = object1.getVelocity().dot(collisionVector);
+        float u2 = object2.getVelocity().dot(collisionVector);
         float massSum = object1.mass + object2.mass;
 
         if (u1 >=0 && u2 <= 0)
@@ -95,15 +92,15 @@ public class Collision {
         Vec2 v2Vector = collisionVector.copy();
         v2Vector.mult(v2);
 
-        object1.velocity = new Vec2(
+        object1.setVelocity(new Vec2(
                 (collisionVector.getX() * v1) + (tangent.getX() * t1),
                 (collisionVector.getY() * v1) + (tangent.getY() * t1)
-        );
+        ));
 
-        object2.velocity = new Vec2(
+        object2.setVelocity(new Vec2(
                 (collisionVector.getX() * v2) + (tangent.getX() * t2),
                 (collisionVector.getY() * v2) + (tangent.getY() * t2)
-        );
+        ));
     }
 
     private void correctPosition()
